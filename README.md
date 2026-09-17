@@ -31,7 +31,7 @@ This is intentionally boring and client-side so it deploys cleanly tonight. The 
 
 1. Open the live URL (or `npm run dev` → http://localhost:3000) in **tab A**. Click **Create a temporary room**. Enter a display name.
 2. Copy the 6-character code (or scan the QR from a phone).
-3. **Tab B:** Home → paste the code → Join → display name.
+3. **Tab B** (same browser is fine — each tab is a separate anonymous person): Home → paste the code → Join → display name.
 4. **Tab C / phone:** open the share URL `/r/{CODE}` (this is what the QR encodes) → display name.
 5. Confirm all three names appear under **In this room**.
 6. Send messages from each client; they should show up live for the others.

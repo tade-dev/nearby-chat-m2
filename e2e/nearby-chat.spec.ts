@@ -59,14 +59,42 @@ test("host + two guests chat, then ended room cannot be rejoined", async ({
   await g2Ctx.close();
 });
 
+test("three tabs in one browser are distinct people", async ({ page, context }) => {
+  await page.goto("/");
+  await page.getByTestId("create-room").click();
+  await enterName(page, "Host Ada");
+  const code = (await page.getByTestId("room-code").innerText()).trim();
+
+  const g1 = await context.newPage();
+  await g1.goto("/");
+  await g1.getByTestId("join-code-input").fill(code);
+  await g1.getByTestId("join-button").click();
+  await enterName(g1, "Guest Bea");
+
+  const g2 = await context.newPage();
+  await g2.goto(`/r/${code}`);
+  await enterName(g2, "Guest Cam");
+
+  await expect(page.getByTestId("presence-list")).toContainText("Host Ada");
+  await expect(page.getByTestId("presence-list")).toContainText("Guest Bea");
+  await expect(page.getByTestId("presence-list")).toContainText("Guest Cam");
+  await expect(page.getByTestId("end-room")).toBeVisible();
+  await expect(g1.getByTestId("end-room")).toHaveCount(0);
+  await expect(g2.getByTestId("end-room")).toHaveCount(0);
+
+  await g2.getByTestId("message-input").fill("cam from another tab");
+  await g2.getByTestId("send-message").click();
+  await expect(page.getByTestId("messages")).toContainText("cam from another tab");
+  await expect(g1.getByTestId("messages")).toContainText("cam from another tab");
+});
+
 test("expired rooms cannot be joined", async ({ page }) => {
   const mqttMod = await import("mqtt");
   const connect = (mqttMod.default?.connect || mqttMod.connect) as typeof import("mqtt").connect;
-  const { MQTT_URL } = await import("../lib/config");
-  const { createRoomMeta, generateRoomCode, topics } = await import("../lib/room");
-
-  const code = generateRoomCode();
-  const client = connect(MQTT_URL, {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(6));
+  const code = Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+  const client = connect("wss://broker.emqx.io:8084/mqtt", {
     clientId: `ncm2-test-${Date.now()}`,
     connectTimeout: 10_000,
   });
@@ -78,9 +106,19 @@ test("expired rooms cannot be joined", async ({ page }) => {
     });
     client.on("error", reject);
   });
-  const expired = createRoomMeta(code, "test-host", Date.now() - 50 * 60 * 1000);
-  expired.status = "active";
-  client.publish(topics(code).meta, JSON.stringify(expired), { qos: 1, retain: true });
+  const createdAt = Date.now() - 50 * 60 * 1000;
+  const expired = {
+    v: 1,
+    code,
+    createdAt,
+    expiresAt: createdAt + 45 * 60 * 1000,
+    status: "active",
+    hostClientId: "test-host",
+  };
+  client.publish(`tade-nearby-chat-m2/${code}/meta`, JSON.stringify(expired), {
+    qos: 1,
+    retain: true,
+  });
   await new Promise((r) => setTimeout(r, 500));
   client.end(true);
 

@@ -2,10 +2,11 @@ const CLIENT_KEY = "ncm2-client-id";
 
 export function getClientId(): string {
   if (typeof window === "undefined") return "";
-  let id = window.localStorage.getItem(CLIENT_KEY);
+  // sessionStorage so each browser tab is a distinct person (2–3 tab testing).
+  let id = window.sessionStorage.getItem(CLIENT_KEY);
   if (!id) {
     id = crypto.randomUUID();
-    window.localStorage.setItem(CLIENT_KEY, id);
+    window.sessionStorage.setItem(CLIENT_KEY, id);
   }
   return id;
 }
@@ -18,13 +19,13 @@ export function nameStorageKey(code: string): string {
   return `ncm2-name:${code}`;
 }
 
-export function isHostOf(code: string, clientId: string): boolean {
+export function isHostOf(code: string, _clientId?: string): boolean {
   if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(hostStorageKey(code)) === clientId;
+  return window.sessionStorage.getItem(hostStorageKey(code)) === "1";
 }
 
-export function markHost(code: string, clientId: string): void {
-  window.localStorage.setItem(hostStorageKey(code), clientId);
+export function markHost(code: string, _clientId?: string): void {
+  window.sessionStorage.setItem(hostStorageKey(code), "1");
 }
 
 export function savedName(code: string): string {
