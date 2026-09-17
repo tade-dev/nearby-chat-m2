@@ -4,7 +4,12 @@ Disposable prototype for The Active Studios OS experiment. Isolated from other p
 
 **Room expiry default: 45 minutes.** After that the room cannot be rejoined. The host can end the room sooner; ended rooms also cannot be rejoined.
 
-**Live URL:** *(filled in after Vercel deploy — see “Vercel” below)*
+**Live URL:** https://temporary-agile-walnut-b2jg6ip.vercel.app
+
+This is a Vercel anonymous/temporary production deploy (verified with 3 clients). It expires about **60 minutes after deploy** unless claimed:
+
+- Claim (keeps the deployment on your Vercel account): https://vercel.com/claim-deployment?code=e5c8921b-250b-4928-b748-314a8c2997ed
+- Durable hosting: import this GitHub repo on Vercel so **main** auto-deploys (no env vars). See Vercel below.
 
 ## Stack
 
@@ -49,7 +54,8 @@ npm run dev
 ```bash
 npm test          # unit tests for codes / expiry / join rules
 npx playwright install chromium
-npm run e2e       # 3-browser-context chat + end + expired-room tests
+npm run e2e       # 3-client chat + end + expired-room tests
+BASE_URL=https://temporary-agile-walnut-b2jg6ip.vercel.app npm run e2e
 ```
 
 ## Vercel
@@ -70,4 +76,4 @@ vercel login
 vercel --yes --prod
 ```
 
-If this agent could not complete `vercel login` (no interactive browser / token), the app is still complete on GitHub. Import the repo in the Vercel dashboard to get the live URL.
+If CLI login is unavailable, `vercel deploy --temporary --yes --prod` still publishes an anonymous URL (this is how the live URL above was created). Claim it or connect GitHub for something that lasts.
